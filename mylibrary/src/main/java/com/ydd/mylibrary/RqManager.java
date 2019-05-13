@@ -81,7 +81,13 @@ public class RqManager {
      * 重新连接消息队列
      */
     public void retryConnect() {
-        connect(factory, queue, routingKey, asynchronousConfirmListener, asynchronousConsumerListener);
+        cachedThreadPool.execute(new Runnable() {
+            @Override
+            public void run() {
+                connect(factory, queue, routingKey, asynchronousConfirmListener, asynchronousConsumerListener);
+
+            }
+        });
     }
 
     private void connect(ConnectionFactory factory, String queue, String routingKey, final AsynchronousConfirmListener asynchronousConfirmListener, final AsynchronousConsumerListener asynchronousConsumerListener) {
@@ -106,8 +112,6 @@ public class RqManager {
 
                 //3 绑定交换器与队列通过路由键进行绑定(队列，交换机)
                 channel.queueBind(queue, exchange, routingKey);
-
-                Log.e(TAG, ">>>>>>>" + producer);
                 Log.e(TAG, "生产者模式");
 
                 // 4 开启校验模式
@@ -203,7 +207,12 @@ public class RqManager {
      */
     public void submit(final String msg) throws NullPointerException {
 
-        if (channel == null) return;
+        if (channel == null){
+
+            asynchronousExceptionCallback.callback("还没连上服务器呢，检查一下网络，再试试吧～");
+
+            return;
+        }
 
         if (producer) {
 

@@ -1,17 +1,29 @@
 package com.ydd.printer;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
+import android.support.v4.content.LocalBroadcastManager;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.Toast;
 
-import com.ydd.mylibrary.RqManager;
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
+
+import static com.ydd.printer.ProducerApplication.rqManager;
 
 
 public class MainActivity extends AppCompatActivity {
 
-
-    RqManager rqManager;
     int sum = 0;
 
     @Override
@@ -20,7 +32,10 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        initRq();
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction("com.ydd.printer");
+
+
         findViewById(R.id.submit_a).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -31,12 +46,16 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void initRq() {
-        //queue和rootingkey一样可以设置成channelId（一家店一个队列统一命名为channelId）
-        rqManager = new RqManager.Builder("202.102.188.56", 43216,
-                "admin", "Ydd.app@609", "B", "B", new AsynchronousConfirmListener(),
-                null,new AsynchronousExceptionCallback()).isProducer(true).create();
+    @Override
+    public void onStart() {
+        super.onStart();
+        EventBus.getDefault().register(this);
+    }
 
+    @Override
+    public void onStop() {
+        super.onStop();
+        EventBus.getDefault().unregister(this);
     }
 
     @Override
@@ -44,33 +63,25 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
 
         rqManager.close();
-
     }
 
-    public static class AsynchronousConfirmListener implements RqManager.AsynchronousConfirmListener {
-        @Override
-        public void callback(boolean isSuccess, String msg) {
+    @Subscribe(sticky = true, threadMode = ThreadMode.MAIN)
+    public void onMessageEvent(String event) {
 
-            if (isSuccess) {
+        new AlertDialog
+                .Builder(MainActivity.this)
+                .setTitle("消息队列警告")
+                .setMessage(event)
+                .setPositiveButton("再试一下", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
 
-                Log.e("DOAING", "发送成功：" + msg);
+                        rqManager.retryConnect();
 
-            } else {
-
-                //投递消息失败，dialog 进行重试
-                Log.e("DOAING", "发送失败：" + msg);
-
-            }
-
-        }
+                    }
+                }).show();
     }
 
-    public static class AsynchronousExceptionCallback implements RqManager.AsynchronousExceptionCallback {
-        @Override
-        public void callback(String exception) {
 
-            Log.e("DOAING", exception);
-        }
-    }
 }
 

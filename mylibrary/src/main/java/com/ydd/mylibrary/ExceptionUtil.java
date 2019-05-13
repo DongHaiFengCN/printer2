@@ -12,14 +12,14 @@ public class ExceptionUtil {
 
         if(e instanceof ConnectException ){
 
-            msg = "消息队列服务器连接失败请重试";
+            msg = "网络是不是没连接？检查一下，再试试吧";
         }else if(e instanceof TimeoutException){
 
-            msg = "消息队列服务器连接超时请重试";
+            msg = "服务器有点忙，等下再试试";
 
         }else if (e instanceof AlreadyClosedException){
 
-            msg = "网络断开警告，检查网络状态重新连接";
+            msg = "网络好像断开了，检查一下，再试试吧";
 
         }
         return msg;
