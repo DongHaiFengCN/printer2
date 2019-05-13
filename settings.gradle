@@ -1,0 +1,1 @@
+include ':producer', ':mylibrary', ':consumer'
