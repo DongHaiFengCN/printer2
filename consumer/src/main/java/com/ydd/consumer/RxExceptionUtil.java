@@ -13,8 +13,8 @@ import retrofit2.HttpException;
  *
  * 统一异常处理
  */
-public class RxExceptionUtil {
-    public static String exceptionHandler(Throwable e){
+class RxExceptionUtil {
+    static String exceptionHandler(Throwable e){
         String errorMsg = "网络连接错误";
         if (e instanceof UnknownHostException) {
             errorMsg = "网络不可用";

@@ -1,9 +1,9 @@
 package com.ydd.printer;
 
 import android.app.Application;
-import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
+import com.ydd.mylibrary.ExceptionUtil;
 import com.ydd.mylibrary.RqManager;
 
 import org.greenrobot.eventbus.EventBus;
@@ -23,7 +23,7 @@ public class ProducerApplication extends Application {
         //queue和rootingkey一样可以设置成channelId（一家店一个队列统一命名为channelId）
         rqManager = new RqManager.Builder("202.102.188.56", 43216,
                 "admin", "Ydd.app@609", "B", "B", new AsynchronousConfirmListener(),
-                null, new AsynchronousExceptionCallback(),new AsynchronousStartCallback()).isProducer(true).create();
+                null, new AsynchronousExceptionCallback()).isProducer(true).create();
 
     }
 
@@ -53,23 +53,9 @@ public class ProducerApplication extends Application {
     public class AsynchronousExceptionCallback implements RqManager.AsynchronousExceptionCallback {
         @Override
         public void callback(String exception) {
-            try {
-                Thread.sleep(200);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
 
             EventBus.getDefault().post(exception);
-
         }
     }
 
-    public class AsynchronousStartCallback implements RqManager.AsynchronousStartCallback{
-        @Override
-        public void callback(String status) {
-
-            Log.e("DOAING",status);
-
-        }
-    }
 }

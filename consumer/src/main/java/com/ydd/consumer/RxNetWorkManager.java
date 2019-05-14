@@ -1,6 +1,6 @@
 package com.ydd.consumer;
 
-import android.content.Context;
+import android.annotation.SuppressLint;
 
 import java.util.concurrent.TimeUnit;
 import okhttp3.OkHttpClient;
@@ -12,11 +12,12 @@ import retrofit2.converter.gson.GsonConverterFactory;
 /**
  * 网络请求管理，初始化网络配置
  */
-public class RxNetWorkManager {
+ class RxNetWorkManager {
+    @SuppressLint("StaticFieldLeak")
     private static RxNetWorkManager ourInstance;
     private Retrofit retrofit;
 
-    public static RxNetWorkManager getInstance(Context context) {
+     static RxNetWorkManager getInstance() {
 
         if (ourInstance == null) {
 
@@ -24,7 +25,7 @@ public class RxNetWorkManager {
 
                 if (ourInstance == null) {
                     ourInstance = new RxNetWorkManager();
-                    ourInstance.initRetrofit(context);
+                    ourInstance.initRetrofit();
                 }
             }
         }
@@ -34,7 +35,7 @@ public class RxNetWorkManager {
     /**
      * 初始化必要对象和参数
      */
-    private void initRetrofit(Context context) {
+    private void initRetrofit() {
 
         //加入okhttp的日志
         HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
@@ -60,7 +61,7 @@ public class RxNetWorkManager {
     }
 
 
-    public Retrofit getRetrofit() {
+     Retrofit getRetrofit() {
 
         return retrofit;
     }
