@@ -46,18 +46,25 @@ public class RqManager {
      */
     private AsynchronousExceptionCallback asynchronousExceptionCallback;
 
+    /**
+     * 启动连接的时候，状态返回{正在连接——>连接成功！}
+     */
+    private AsynchronousStartCallback asynchronousStartCallback;
+
     private RqManager(final String host, final int port,
                       final String userName, final String passWord,
                       final String routingKey, final String queue,
                       final AsynchronousConfirmListener asynchronousConfirmListener,
                       final AsynchronousConsumerListener asynchronousConsumerListener,
-                      final AsynchronousExceptionCallback asynchronousExceptionCallback) {
+                      final AsynchronousExceptionCallback asynchronousExceptionCallback,
+                      final AsynchronousStartCallback asynchronousStartCallback) {
 
         this.queue = queue;
         this.asynchronousConfirmListener = asynchronousConfirmListener;
         this.asynchronousConsumerListener = asynchronousConsumerListener;
         this.routingKey = routingKey;
         this.asynchronousExceptionCallback = asynchronousExceptionCallback;
+        this.asynchronousStartCallback = asynchronousStartCallback;
 
         cachedThreadPool = Executors.newCachedThreadPool();
         cachedThreadPool.execute(new Runnable() {
@@ -71,7 +78,7 @@ public class RqManager {
                 factory.setRequestedHeartbeat(60);//心跳时间（秒）
                 factory.setAutomaticRecoveryEnabled(true);// 设置连接恢复
                 factory.setNetworkRecoveryInterval(3000);//重连时间
-                connect(factory, queue, routingKey, asynchronousConfirmListener, asynchronousConsumerListener);
+                connect(factory, queue, routingKey);
 
             }
         });
@@ -84,21 +91,20 @@ public class RqManager {
         cachedThreadPool.execute(new Runnable() {
             @Override
             public void run() {
-                connect(factory, queue, routingKey, asynchronousConfirmListener, asynchronousConsumerListener);
+                connect(factory, queue, routingKey);
 
             }
         });
     }
 
-    private void connect(ConnectionFactory factory, String queue, String routingKey, final AsynchronousConfirmListener asynchronousConfirmListener, final AsynchronousConsumerListener asynchronousConsumerListener) {
+    private void connect(ConnectionFactory factory, String queue, String routingKey) {
+        close();
         try {
 
-            Log.e("DOAING", "正在连接。。");
+            asynchronousStartCallback.callback("正在连接。。");
             connection = factory.newConnection();//创建连接
-            Log.e("DOAING", "连接成功");
-            Log.e("DOAING", "创建通道。。");
             channel = connection.createChannel();
-            Log.e("DOAING", "创建通道成功");
+            asynchronousStartCallback.callback("连接成功。。");
 
             if (producer) {
 
@@ -162,7 +168,8 @@ public class RqManager {
 
     /**
      * 手动消费掉信息
-     * @param tag
+     *
+     * @param tag 序列号，自增
      */
     public void basicAck(long tag) {
 
@@ -181,8 +188,13 @@ public class RqManager {
 
         public Builder(@NonNull String host, int port, @NonNull String userName, @NonNull String passWord,
                        @NonNull String routingKey, @NonNull String queue, AsynchronousConfirmListener asynchronousConfirmListener,
-                       AsynchronousConsumerListener asynchronousConsumerListener, @NonNull AsynchronousExceptionCallback asynchronousExceptionCallback) {
-            params = new Params(host, port, userName, passWord, routingKey, queue, asynchronousConfirmListener, asynchronousConsumerListener, asynchronousExceptionCallback);
+                       AsynchronousConsumerListener asynchronousConsumerListener,
+                       @NonNull AsynchronousExceptionCallback asynchronousExceptionCallback,
+                       @NonNull AsynchronousStartCallback asynchronousStartCallback
+
+        ) {
+            params = new Params(host, port, userName, passWord, routingKey, queue, asynchronousConfirmListener,
+                    asynchronousConsumerListener, asynchronousExceptionCallback, asynchronousStartCallback);
         }
 
         public Builder isProducer(boolean p) {
@@ -196,7 +208,9 @@ public class RqManager {
             return new RqManager(params.host, params.port, params.userName
                     , params.passWord, params.routingKey, params.queue,
                     params.asynchronousConfirmListener,
-                    params.asynchronousConsumerListener, params.asynchronousExceptionCallback);
+                    params.asynchronousConsumerListener,
+                    params.asynchronousExceptionCallback,
+                    params.asynchronousStartCallback);
         }
     }
 
@@ -207,7 +221,7 @@ public class RqManager {
      */
     public void submit(final String msg) throws NullPointerException {
 
-        if (channel == null){
+        if (channel == null) {
 
             asynchronousExceptionCallback.callback("还没连上服务器呢，检查一下网络，再试试吧～");
 
@@ -268,7 +282,7 @@ public class RqManager {
     private static class Params {
         Params(String host, int port, String userName, String passWord, String routingKey, String queue,
                AsynchronousConfirmListener asynchronousConfirmListener, AsynchronousConsumerListener asynchronousConsumerListener,
-               AsynchronousExceptionCallback asynchronousExceptionCallback) {
+               AsynchronousExceptionCallback asynchronousExceptionCallback, AsynchronousStartCallback asynchronousStartCallback) {
             this.host = host;
             this.port = port;
             this.userName = userName;
@@ -278,6 +292,7 @@ public class RqManager {
             this.asynchronousConfirmListener = asynchronousConfirmListener;
             this.asynchronousConsumerListener = asynchronousConsumerListener;
             this.asynchronousExceptionCallback = asynchronousExceptionCallback;
+            this.asynchronousStartCallback = asynchronousStartCallback;
         }
 
         String host;
@@ -289,6 +304,7 @@ public class RqManager {
         String queue;
         AsynchronousConfirmListener asynchronousConfirmListener;
         AsynchronousConsumerListener asynchronousConsumerListener;
+        AsynchronousStartCallback asynchronousStartCallback;
     }
 
     public interface AsynchronousConfirmListener {
@@ -305,4 +321,7 @@ public class RqManager {
         void callback(String exception);
     }
 
+    public interface AsynchronousStartCallback {
+        void callback(String status);
+    }
 }

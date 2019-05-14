@@ -23,7 +23,7 @@ public class ProducerApplication extends Application {
         //queue和rootingkey一样可以设置成channelId（一家店一个队列统一命名为channelId）
         rqManager = new RqManager.Builder("202.102.188.56", 43216,
                 "admin", "Ydd.app@609", "B", "B", new AsynchronousConfirmListener(),
-                null, new AsynchronousExceptionCallback()).isProducer(true).create();
+                null, new AsynchronousExceptionCallback(),new AsynchronousStartCallback()).isProducer(true).create();
 
     }
 
@@ -60,6 +60,15 @@ public class ProducerApplication extends Application {
             }
 
             EventBus.getDefault().post(exception);
+
+        }
+    }
+
+    public class AsynchronousStartCallback implements RqManager.AsynchronousStartCallback{
+        @Override
+        public void callback(String status) {
+
+            Log.e("DOAING",status);
 
         }
     }

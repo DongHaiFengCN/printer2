@@ -1,41 +1,23 @@
 package com.ydd.printer;
-
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
-import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
-import android.widget.Toast;
-
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
-
 import static com.ydd.printer.ProducerApplication.rqManager;
-
-
 public class MainActivity extends AppCompatActivity {
-
     int sum = 0;
-
     @Override
-
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction("com.ydd.printer");
-
-
         findViewById(R.id.submit_a).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -62,7 +44,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
 
-        rqManager.close();
     }
 
     @Subscribe(sticky = true, threadMode = ThreadMode.MAIN)
@@ -80,6 +61,7 @@ public class MainActivity extends AppCompatActivity {
 
                     }
                 }).show();
+
     }
 
 

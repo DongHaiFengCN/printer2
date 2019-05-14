@@ -58,7 +58,8 @@ public class MainActivity extends AppCompatActivity {
         //queue和rootingkey一样可以设置成channelId（一家店一个队列统一命名为channelId）
         rqManager = new RqManager.Builder("202.102.188.56", 43216,
                 "admin", "Ydd.app@609", "B", "B",
-                null, new AsynchronousConsumerListener(),new AsynchronousExceptionCallback()).isProducer(false).create();
+                null, new AsynchronousConsumerListener(),
+                new AsynchronousExceptionCallback(),new AsynchronousStartCallback()).isProducer(false).create();
 
     }
 
@@ -77,6 +78,15 @@ public class MainActivity extends AppCompatActivity {
         public void callback(String exception) {
 
             Log.e("DOAING", exception);
+        }
+    }
+
+    public class AsynchronousStartCallback implements RqManager.AsynchronousStartCallback{
+        @Override
+        public void callback(String status) {
+
+            Log.e("DOAING",status);
+
         }
     }
 }
